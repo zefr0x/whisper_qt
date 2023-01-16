@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.5
+Type=Application
+Name=Whisper Qt
+# TODO: Write comment.
+Comment=
+GenericName=Speech Recognizer
+Exec=whisper-qt
+Icon=io.github.zer0_x.Whisper_Qt
+Terminal=false
+Categories=Office;Qt;
+# TODO: Add keywords.
+Keywords=
