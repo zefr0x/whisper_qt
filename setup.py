@@ -20,7 +20,7 @@ ISSUES = "https://github.com/zer0-x/whisper_qt/issues"
 CHANGELOG = "https://github.com/zer0-x/whisper_qt/blob/main/CHANGELOG.md"
 
 setup(
-    name="whisper_qt/",
+    name="whisper_qt",
     version=APP_VERSION,
     author=__author__,
     maintainer=__maintainer__,
