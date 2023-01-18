@@ -13,9 +13,9 @@ For now [GitHub bug traker](https://github.com/zer0-x/whisper_qt/issues) is used
 >    `pre-commit` will take care about generating `.txt` files. You should just edit `.in` files or use `pip-tools` to upgrade locked requirements.
 
 ### Create a virtual environment and install dependencies
-First clone the git repository:
+First clone the git repository with it's submodules:
 ```
-git clone https://github.com/zer0-x/whisper_qt.git
+git clone --recurse-submodules https://github.com/zer0-x/whisper_qt.git
 ```
 
 For development you are recomended to use [pip-tools](https://pip-tools.rtfd.io/) for reproducing the same environment.

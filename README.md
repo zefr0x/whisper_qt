@@ -34,9 +34,9 @@ Not available yet...
 ### AUR
 Not available yet...
 ### From the git repo <sup>`(Not recomended)`</sup>
-1. Clone the repo from github and cd to it
+1. Clone the repository with it's submodules from github, then `cd` to it
 ```shell
-git clone https://github.com/zer0-x/whisper_qt.git
+git clone --recurse-submodules https://github.com/zer0-x/whisper_qt.git
 cd whisper_qt
 ```
 2. Use the `setup.py` file to install it
