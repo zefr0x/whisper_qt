@@ -1,6 +1,5 @@
 project_name := "whisper_qt"
 
-alias t := test
 alias r := run
 
 _default:
@@ -8,9 +7,6 @@ _default:
 
 run:
 	python -m {{ project_name }}
-
-test:
-	pytest tests/
 
 lint_all:
 	pre-commit run --all-files
