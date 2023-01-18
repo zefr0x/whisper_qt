@@ -33,7 +33,7 @@ setup(
         "Issues": ISSUES,
         "Changelog": CHANGELOG,
     },
-    packages=find_packages(),
+    packages=find_packages() + ["whisper_qt.whisper.whisper", "whisper_qt.whisper.whisper.normalizers"],
     entry_points={"console_scripts": ["whisper-qt = whisper_qt.__main__:main"]},
     # TODO: Add more keywords and classifiers.
     keywords=[
