@@ -12,9 +12,10 @@ from PySide6 import QtWidgets
 
 from . import help_dialogs
 from . import preferences
-from ..__about__ import PROJECT_HOME_PAGE_URL
-from ..__about__ import BUG_REPORT_URL
 from ..__about__ import APP_NAME_LOCALIZABLE
+from ..__about__ import BUG_REPORT_URL
+from ..__about__ import PROJECT_HOME_PAGE_URL
+from ..whisper import whisper
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -38,8 +39,19 @@ class MainWindow(QtWidgets.QMainWindow):
         preferences_action = QtGui.QAction(
             QtGui.QIcon().fromTheme("settings"), _("&Preferences"), self
         )
-        preferences_action.triggered.connect(lambda: preferences.PreferencesDialog().exec())
+        preferences_action.triggered.connect(
+            lambda: preferences.PreferencesDialog().exec()
+        )
         config_menu.addAction(preferences_action)
+
+        save_current_options = QtGui.QAction(
+            QtGui.QIcon().fromTheme("document-save"),
+            _("&Sava Current Options as Default"),
+            self,
+        )
+        # TODO: Implement save current options action.
+        # save_current_options.triggered.connect()
+        config_menu.addAction(save_current_options)
 
         # Action to exit the application.
         exit_app = QtGui.QAction(
@@ -149,19 +161,18 @@ class MainPanel(QtWidgets.QWidget):
         # A spacer
         main_layout.addItem(QtWidgets.QSpacerItem(0, 15))
 
-        # Where you can select engine and audio language.
+        # Where you can select main wisper options.
         options_layout = QtWidgets.QHBoxLayout()
         options_layout.setAlignment(QtCore.Qt.AlignCenter)
         main_layout.addLayout(options_layout)
 
-        # Select engine
+        # Select model
         options_layout.addWidget(QtWidgets.QLabel(_("Model")))
 
-        self.__cobx_engine = QtWidgets.QComboBox()
-        # TODO: Add models list:
-        self.__cobx_engine.addItems(())
-        self.__cobx_engine.setMaximumWidth(self.__cobx_engine.minimumSizeHint().width())
-        options_layout.addWidget(self.__cobx_engine)
+        self.__cobx_model = QtWidgets.QComboBox()
+        self.__cobx_model.addItems(whisper._MODELS.keys())
+        self.__cobx_model.setMaximumWidth(self.__cobx_model.minimumSizeHint().width())
+        options_layout.addWidget(self.__cobx_model)
 
         options_layout.addSpacing(35)
 
@@ -169,12 +180,114 @@ class MainPanel(QtWidgets.QWidget):
         options_layout.addWidget(QtWidgets.QLabel(_("Audio Language")))
 
         self.__cobx_audio_lang = QtWidgets.QComboBox()
-        # TODO: Add languages list:
-        self.__cobx_audio_lang.addItems(())
+        self.__cobx_audio_lang.addItems(whisper.tokenizer.LANGUAGES.values())
         self.__cobx_audio_lang.setMaximumWidth(
             self.__cobx_audio_lang.minimumSizeHint().width()
         )
         options_layout.addWidget(self.__cobx_audio_lang)
+
+        options_layout.addSpacing(35)
+
+        # Select task
+        options_layout.addWidget(QtWidgets.QLabel(_("Task")))
+
+        self.__cobx_task = QtWidgets.QComboBox()
+        self.__cobx_task.addItems((_("Transcribe"), _("Translate")))  # Index 0, 1
+        self.__cobx_task.setMaximumWidth(self.__cobx_task.minimumSizeHint().width())
+        options_layout.addWidget(self.__cobx_task)
+
+        options_layout.addSpacing(35)
+
+        # Select device
+        options_layout.addWidget(QtWidgets.QLabel(_("Device")))
+
+        self.__cobx_device = QtWidgets.QComboBox()
+        self.__cobx_device.addItems(("CUDA", "CPU"))
+        self.__cobx_device.setMaximumWidth(self.__cobx_device.minimumSizeHint().width())
+        options_layout.addWidget(self.__cobx_device)
+
+        options_layout.addSpacing(35)
+
+        # Set threads
+        options_layout.addWidget(QtWidgets.QLabel(_("Threads")))
+
+        self.__sp_threads = QtWidgets.QSpinBox()
+        self.__sp_threads.setMaximumWidth(self.__sp_threads.minimumSizeHint().width())
+        options_layout.addWidget(self.__sp_threads)
+
+        options_layout.addSpacing(35)
+
+        # Where you can select advanced wisper options.
+        advanced_options_layout = QtWidgets.QHBoxLayout()
+        advanced_options_layout.setAlignment(QtCore.Qt.AlignCenter)
+        main_layout.addLayout(advanced_options_layout)
+
+        # Set temperature
+        advanced_options_layout.addWidget(QtWidgets.QLabel(_("Temperature")))
+
+        # TODO: Find a way to apply tuple rather then just single float.
+        self.__sp_temperature = QtWidgets.QDoubleSpinBox()
+        self.__sp_temperature.setMaximumWidth(
+            self.__sp_temperature.minimumSizeHint().width()
+        )
+        advanced_options_layout.addWidget(self.__sp_temperature)
+
+        advanced_options_layout.addSpacing(35)
+
+        # Set best_of
+        advanced_options_layout.addWidget(QtWidgets.QLabel(_("Best of")))
+
+        self.__sp_best_of = QtWidgets.QSpinBox()
+        self.__sp_best_of.setMaximumWidth(self.__sp_best_of.minimumSizeHint().width())
+        advanced_options_layout.addWidget(self.__sp_best_of)
+
+        advanced_options_layout.addSpacing(35)
+
+        # Set beam_size
+        advanced_options_layout.addWidget(QtWidgets.QLabel(_("Beam Size")))
+
+        self.__sp_beam_size = QtWidgets.QSpinBox()
+        self.__sp_beam_size.setMaximumWidth(
+            self.__sp_beam_size.minimumSizeHint().width()
+        )
+        advanced_options_layout.addWidget(self.__sp_beam_size)
+
+        advanced_options_layout.addSpacing(35)
+
+        # Set patience
+        advanced_options_layout.addWidget(QtWidgets.QLabel(_("Patience")))
+
+        self.__sp_patience = QtWidgets.QDoubleSpinBox()
+        self.__sp_patience.setMaximumWidth(self.__sp_patience.minimumSizeHint().width())
+        advanced_options_layout.addWidget(self.__sp_patience)
+
+        advanced_options_layout.addSpacing(35)
+
+        # Set length_penalty
+        advanced_options_layout.addWidget(QtWidgets.QLabel(_("Length Penalty")))
+
+        self.__sp_length_penalty = QtWidgets.QDoubleSpinBox()
+        self.__sp_length_penalty.setMaximumWidth(
+            self.__sp_length_penalty.minimumSizeHint().width()
+        )
+        advanced_options_layout.addWidget(self.__sp_length_penalty)
+
+        advanced_options_layout.addSpacing(35)
+
+        # Set fp16
+        advanced_options_layout.addWidget(QtWidgets.QLabel(_("fp16")))
+
+        self.__cbx_fp16 = QtWidgets.QCheckBox()
+        self.__cbx_fp16.setMaximumWidth(self.__cbx_fp16.minimumSizeHint().width())
+        advanced_options_layout.addWidget(self.__cbx_fp16)
+
+        # TODO: add suppress_tokens option.
+        # TODO: add initial_prompt option.
+        # TODO: add condition_on_previous_text option.
+        # TODO: Add temperature_increment_on_fallback option.
+        # TODO: Add compression_ratio_threshold option.
+        # TODO: Add logprob_threshold option.
+        # TODO: Add no_speech_threshold option.
 
         # A spacer
         main_layout.addItem(QtWidgets.QSpacerItem(0, 20))

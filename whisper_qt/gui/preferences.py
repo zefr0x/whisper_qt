@@ -16,3 +16,5 @@ class PreferencesDialog(QtWidgets.QDialog):
         super().__init__()
 
         self.setWindowTitle(APP_NAME_LOCALIZABLE + _(" Preferences"))
+
+        # TODO: Add model_dir option.

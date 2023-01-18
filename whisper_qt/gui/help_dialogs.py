@@ -5,8 +5,8 @@ from PySide6 import QtCore
 from PySide6 import QtGui
 from PySide6 import QtWidgets
 
-from ..__about__ import APP_VERSION
 from ..__about__ import APP_NAME_LOCALIZABLE
+from ..__about__ import APP_VERSION
 
 # TODO: Add about text.
 about_text = _("")
@@ -52,7 +52,9 @@ class About(QtWidgets.QDialog):
         title_layout.addStretch()
 
         logo = QtWidgets.QLabel()
-        logo.setPixmap(QtGui.QIcon().fromTheme("io.github.zer0_x.Whisper_Qt").pixmap(64, 64))
+        logo.setPixmap(
+            QtGui.QIcon().fromTheme("io.github.zer0_x.Whisper_Qt").pixmap(64, 64)
+        )
         title_layout.addWidget(logo)
 
         title = QtWidgets.QLabel(APP_NAME_LOCALIZABLE + f" <sup>{APP_VERSION}</sup>")
