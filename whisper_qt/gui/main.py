@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Optional
 from typing import Sequence
 from webbrowser import open as open_url
+import threading
 
 from PySide6 import QtCore
 from PySide6 import QtGui
@@ -16,6 +17,7 @@ from ..__about__ import APP_NAME_LOCALIZABLE
 from ..__about__ import BUG_REPORT_URL
 from ..__about__ import PROJECT_HOME_PAGE_URL
 from ..whisper import whisper
+from .. import whisper_process
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -84,6 +86,18 @@ class MainWindow(QtWidgets.QMainWindow):
 
 class MainPanel(QtWidgets.QWidget):
     """Central widget for the main window."""
+
+    reset_gui_after_sucess = QtCore.Signal()
+    reset_gui_after_cancel = QtCore.Signal()
+    lock_buttons_during_operation = QtCore.Signal()
+    update_progress = QtCore.Signal(str, int)
+    update_file_progress = QtCore.Signal(str)
+    set_progress_indefinite = QtCore.Signal()
+    show_message = QtCore.Signal(str, str, Optional[str])
+    toggle_generate_cancel_button = QtCore.Signal()
+
+    # To tell the processes thread that the task was canceled and didn't success.
+    processes_thread_stop = threading.Event()
 
     def __init__(self) -> None:
         """Initialize base components."""
@@ -170,7 +184,7 @@ class MainPanel(QtWidgets.QWidget):
         options_layout.addWidget(QtWidgets.QLabel(_("Model")))
 
         self.__cobx_model = QtWidgets.QComboBox()
-        self.__cobx_model.addItems(whisper._MODELS.keys())
+        self.__cobx_model.addItems(whisper.available_models())
         self.__cobx_model.setMaximumWidth(self.__cobx_model.minimumSizeHint().width())
         options_layout.addWidget(self.__cobx_model)
 
@@ -180,6 +194,7 @@ class MainPanel(QtWidgets.QWidget):
         options_layout.addWidget(QtWidgets.QLabel(_("Audio Language")))
 
         self.__cobx_audio_lang = QtWidgets.QComboBox()
+        self.__cobx_audio_lang.addItem("Auto")
         self.__cobx_audio_lang.addItems(whisper.tokenizer.LANGUAGES.values())
         self.__cobx_audio_lang.setMaximumWidth(
             self.__cobx_audio_lang.minimumSizeHint().width()
@@ -218,6 +233,7 @@ class MainPanel(QtWidgets.QWidget):
         options_layout.addSpacing(35)
 
         # Where you can select advanced wisper options.
+        # TODO: Hide advanced options inside a fold.
         advanced_options_layout = QtWidgets.QHBoxLayout()
         advanced_options_layout.setAlignment(QtCore.Qt.AlignCenter)
         main_layout.addLayout(advanced_options_layout)
@@ -227,6 +243,7 @@ class MainPanel(QtWidgets.QWidget):
 
         # TODO: Find a way to apply tuple rather then just single float.
         self.__sp_temperature = QtWidgets.QDoubleSpinBox()
+        self.__sp_temperature.setValue(0)
         self.__sp_temperature.setMaximumWidth(
             self.__sp_temperature.minimumSizeHint().width()
         )
@@ -238,6 +255,7 @@ class MainPanel(QtWidgets.QWidget):
         advanced_options_layout.addWidget(QtWidgets.QLabel(_("Best of")))
 
         self.__sp_best_of = QtWidgets.QSpinBox()
+        self.__sp_best_of.setValue(5)
         self.__sp_best_of.setMaximumWidth(self.__sp_best_of.minimumSizeHint().width())
         advanced_options_layout.addWidget(self.__sp_best_of)
 
@@ -247,30 +265,11 @@ class MainPanel(QtWidgets.QWidget):
         advanced_options_layout.addWidget(QtWidgets.QLabel(_("Beam Size")))
 
         self.__sp_beam_size = QtWidgets.QSpinBox()
+        self.__sp_beam_size.setValue(5)
         self.__sp_beam_size.setMaximumWidth(
             self.__sp_beam_size.minimumSizeHint().width()
         )
         advanced_options_layout.addWidget(self.__sp_beam_size)
-
-        advanced_options_layout.addSpacing(35)
-
-        # Set patience
-        advanced_options_layout.addWidget(QtWidgets.QLabel(_("Patience")))
-
-        self.__sp_patience = QtWidgets.QDoubleSpinBox()
-        self.__sp_patience.setMaximumWidth(self.__sp_patience.minimumSizeHint().width())
-        advanced_options_layout.addWidget(self.__sp_patience)
-
-        advanced_options_layout.addSpacing(35)
-
-        # Set length_penalty
-        advanced_options_layout.addWidget(QtWidgets.QLabel(_("Length Penalty")))
-
-        self.__sp_length_penalty = QtWidgets.QDoubleSpinBox()
-        self.__sp_length_penalty.setMaximumWidth(
-            self.__sp_length_penalty.minimumSizeHint().width()
-        )
-        advanced_options_layout.addWidget(self.__sp_length_penalty)
 
         advanced_options_layout.addSpacing(35)
 
@@ -281,9 +280,11 @@ class MainPanel(QtWidgets.QWidget):
         self.__cbx_fp16.setMaximumWidth(self.__cbx_fp16.minimumSizeHint().width())
         advanced_options_layout.addWidget(self.__cbx_fp16)
 
-        # TODO: add suppress_tokens option.
-        # TODO: add initial_prompt option.
-        # TODO: add condition_on_previous_text option.
+        # TODO: Add patience option.
+        # TODO: Add length_penalty option.
+        # TODO: Add suppress_tokens option.
+        # TODO: Add initial_prompt option.
+        # TODO: Add condition_on_previous_text option.
         # TODO: Add temperature_increment_on_fallback option.
         # TODO: Add compression_ratio_threshold option.
         # TODO: Add logprob_threshold option.
@@ -326,6 +327,22 @@ class MainPanel(QtWidgets.QWidget):
         self.__current_operation_progress_lable = QtWidgets.QLabel()
         progress_bar_description_layout.addWidget(
             self.__current_operation_progress_lable
+        )
+
+        # Connect signals to functions
+        self.reset_gui_after_sucess.connect(self.__listener_reseting_gui_after_success)
+        self.reset_gui_after_cancel.connect(self.__listener_reseting_gui_after_cancel)
+        self.lock_buttons_during_operation.connect(
+            self.__listener_locking_buttons_during_operation
+        )
+        self.update_progress.connect(self.__listener_updateing_progress)
+        self.update_file_progress.connect(self.__listener_updating_file_progress)
+        self.set_progress_indefinite.connect(
+            self.__listener_setting_progress_indefinite
+        )
+        self.show_message.connect(self.__listener_show_message)
+        self.toggle_generate_cancel_button.connect(
+            self.__listener_toggle_generate_cancel_button
         )
 
     def __add_files_to_list(self, files: tuple[str, ...]) -> None:
@@ -389,40 +406,58 @@ class MainPanel(QtWidgets.QWidget):
         """Clear list and enable buttons after success."""
         self.__selected_files_list.clear()
 
+        self.__b_run_generator.setEnabled(False)
+        self.__b_remove_files.setEnabled(False)
+
         self.__listener_reseting_gui_after_cancel()
 
     def __listener_reseting_gui_after_cancel(self):
         """Reset progress bar and enable buttons after canceling the operation."""
+        # Show generate button insted of cancel button.
+        self.__listener_toggle_generate_cancel_button()
+
         self.__reset_progressbar()
+
+        if self.__b_run_generator.isEnabled():
+            self.__b_remove_files.setEnabled(True)
 
         self.__b_select_files.setEnabled(True)
         self.__b_select_output.setEnabled(True)
+        self.__cobx_model.setEnabled(True)
         self.__cobx_audio_lang.setEnabled(True)
-        self.__b_run_generator.setEnabled(True)
-        self.__b_remove_files.setEnabled(True)
+        self.__cobx_task.setEnabled(True)
+        self.__cobx_device.setEnabled(True)
+        self.__sp_threads.setEnabled(True)
+        self.__sp_temperature.setEnabled(True)
+        self.__sp_best_of.setEnabled(True)
+        self.__sp_beam_size.setEnabled(True)
+        self.__cbx_fp16.setEnabled(True)
 
     def __listener_locking_buttons_during_operation(self):
         """Disable buttons when there is a running operation."""
-        self.__b_run_generator.setEnabled(False)
         self.__b_remove_files.setEnabled(False)
         self.__b_select_files.setEnabled(False)
         self.__b_select_output.setEnabled(False)
+        self.__cobx_model.setEnabled(False)
         self.__cobx_audio_lang.setEnabled(False)
-
-        QtCore.QCoreApplication.processEvents()
+        self.__cobx_task.setEnabled(False)
+        self.__cobx_device.setEnabled(False)
+        self.__sp_threads.setEnabled(False)
+        self.__sp_temperature.setEnabled(False)
+        self.__sp_best_of.setEnabled(False)
+        self.__sp_beam_size.setEnabled(False)
+        self.__cbx_fp16.setEnabled(False)
 
     def __listener_updateing_progress(self, string: str, percentage: int):
         """When there is a progress update display it in the GUI."""
         self.__current_operation_progress_lable.setText(string)
         self.__progress_bar.setValue(percentage)
-        QtCore.QCoreApplication.processEvents()
 
     def __listener_updating_file_progress(self, string: str):
         """Update the GUI to display which file it currently being processed."""
         self.__current_file_progress_lable.setText(string)
-        QtCore.QCoreApplication.processEvents()
 
-    def __set_progress_indefinite(self):
+    def __listener_setting_progress_indefinite(self):
         """Make the progress bar indefinite by making no minimum or maximum value."""
         self.__progress_bar.setMinimum(0)
         self.__progress_bar.setMaximum(0)
@@ -433,7 +468,7 @@ class MainPanel(QtWidgets.QWidget):
         self.__progress_bar.setMaximum(100)
         self.__listener_updateing_progress("", 0)
 
-    def __show_message(
+    def __listener_show_message(
         self, message_type: str, text: str, title: Optional[str] = None
     ) -> int:
         """Show messages as a message box widget in the GUI."""
@@ -448,7 +483,7 @@ class MainPanel(QtWidgets.QWidget):
 
         return message.exec()
 
-    def __toggle_generate_cancel_button(self):
+    def __listener_toggle_generate_cancel_button(self):
         """Show a `generate` button when the task is not running, and vice versa."""
         if self.__b_run_generator.isHidden():
             self.__b_run_generator.setHidden(False)
@@ -459,61 +494,73 @@ class MainPanel(QtWidgets.QWidget):
 
     def __listener_running_generator(self):
         """Actions when the task is started."""
-        # TODO: Link wisper with the gui.
-
-        # #Execute the main job in a separate thread to avoid gui being locked
-        # self.thread_exec =
-        # tuple(
-        #     self.__selected_files_list.item(i).text()
-        #     for i in range(self.__selected_files_list.count())
-        # ),
-        # self.__output_directory.text(),
-        # # Extract language code from text displayed in the combobox.
-        # self.__cobx_audio_lang.currentText().split(" ")[0]
-
-        # # Connect signals from thread to GUI actions.
-        # self.thread_exec.locking_gui.connect(
-        #     self.__listener_locking_buttons_during_operation
-        # )
-        # self.thread_exec.reseting_gui_after_success.connect(
-        #     self.__listener_reseting_gui_after_success
-        # )
-        # self.thread_exec.reseting_gui_after_cancel.connect(
-        #     self.__listener_reseting_gui_after_cancel
-        # )
-        # self.thread_exec.updateing_progress.connect(self.__listener_updateing_progress)
-        # self.thread_exec.updating_file_progress.connect(
-        #     self.__listener_updating_file_progress
-        # )
-        # self.thread_exec.sending_message.connect(self.__show_message)
-        # self.thread_exec.start()
+        self.lock_buttons_during_operation.emit()
 
         # Show cancel button insted of generate button.
-        self.__toggle_generate_cancel_button()
+        self.toggle_generate_cancel_button.emit()
+
+        self.processes = [
+            whisper_process.WhisperProcess(
+                audio_file,
+                self.__cobx_audio_lang.currentText().title(),
+                self.__output_directory.text(),
+                self.__cobx_model.currentText(),
+                self.__cobx_device.currentText().lower(),
+                self.__sp_threads.value(),
+                options={
+                    "task": ("transcribe", "translate")[self.__cobx_task.currentIndex()],
+                    "temperature": self.__sp_temperature.value(),
+                    "best_of": self.__sp_best_of.value(),
+                    "beam_size": self.__sp_beam_size.value(),
+                    "fp16": self.__cbx_fp16.isChecked(),
+                },
+            )
+            for audio_file in tuple(
+                self.__selected_files_list.item(i).text()
+                for i in range(self.__selected_files_list.count())
+            )
+        ]
+
+        def thread_run() -> None:
+            """Run processes under a thread to detect when they finish without freezing the GUI."""
+            for process in self.processes:
+                # PERF: Set max processes count and don't run a lot of process at ones.
+                process.start()
+
+            # TODO: Optionaly run processes in queue.
+            # self.update_file_progress.emit(process.audio_file_path)
+
+            for process in self.processes:
+                process.join()
+
+            if not self.processes_thread_stop.isSet():
+                self.reset_gui_after_sucess.emit()
+            self.processes_thread_stop.clear()
+
+        self.thread = threading.Thread(target=thread_run)
+        self.thread.start()
+
+        # TODO: Display progress bar.
+        # self.update_progress.emit()
+
+        # TODO: Display errors and warnings.
+        # self.__show_message()
 
     def __listener_cancel_generator(self):
         """Actions when the task is canceled."""
-        # TODO: Link wisper with the gui.
+        self.update_progress.emit(_("Cancelling..."), 0)
+        self.update_file_progress.emit("")
 
-        # Show generate button insted of cancel button.
-        self.__toggle_generate_cancel_button()
+        self.processes_thread_stop.set()
 
-        # self.thread_cancel = thread_cancel(self.thread_exec)
+        for process in self.processes:
+            try:
+                process.terminate()
+            except AttributeError:
+                pass
 
-        # Only if worker thread is running.
-        # if self.thread_exec and self.thread_exec.is_running():
-        #     self.__listener_updateing_progress(_("Cancelling..."), 0)
-        #     self.__listener_updating_file_progress("")
-        #     self.__set_progress_indefinite()
-        #
-        #     # Connect termination signal to reset the GUI.
-        #     self.thread_cancel.terminated.connect(
-        #         self.__listener_reseting_gui_after_cancel
-        #     )
-        #
-        #     # Run the cancel operation in new thread to avoid freezing the GUI.
-        #     self.thread_cancel.start()
-        #     self.thread_exec = None
+        self.set_progress_indefinite.emit()
+        self.reset_gui_after_cancel.emit()
 
     def dragEnterEvent(self, event):  # noqa: N802
         """When a drag action enters the panel."""
