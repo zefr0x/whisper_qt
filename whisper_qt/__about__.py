@@ -3,8 +3,8 @@ from gettext import gettext as _
 
 
 APP_ID = "io.github.zer0_x.Whisper_Qt"
-APP_NAME = "Whisper Qt"
-APP_NAME_LOCALIZABLE = _("Whisper Qt")
+APP_NAME = "whisper_qt"
+APP_NAME_LOCALIZABLE = _("WhisperQt")
 
 PROJECT_HOME_PAGE_URL = "https://github.com/zer0-x/whisper_qt"
 BUG_REPORT_URL = "https://github.com/zer0-x/whisper_qt/issues/new/choose"
