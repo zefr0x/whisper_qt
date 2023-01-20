@@ -195,7 +195,7 @@ class MainPanel(QtWidgets.QWidget):
 
         self.__cobx_audio_lang = QtWidgets.QComboBox()
         self.__cobx_audio_lang.addItem("Auto")
-        self.__cobx_audio_lang.addItems(whisper.tokenizer.LANGUAGES.values())
+        self.__cobx_audio_lang.addItems((x.title() for x in whisper.tokenizer.LANGUAGES.values()))
         self.__cobx_audio_lang.setMaximumWidth(
             self.__cobx_audio_lang.minimumSizeHint().width()
         )
@@ -285,7 +285,7 @@ class MainPanel(QtWidgets.QWidget):
         # TODO: Add suppress_tokens option.
         # TODO: Add initial_prompt option.
         # TODO: Add condition_on_previous_text option.
-        # TODO: Add temperature_increment_on_fallback option.
+        # TODO: Add temperature_increment_on_fallback option. See how it works in transcribe.cli
         # TODO: Add compression_ratio_threshold option.
         # TODO: Add logprob_threshold option.
         # TODO: Add no_speech_threshold option.
@@ -502,7 +502,7 @@ class MainPanel(QtWidgets.QWidget):
         self.processes = [
             whisper_process.WhisperProcess(
                 audio_file,
-                self.__cobx_audio_lang.currentText().title(),
+                self.__cobx_audio_lang.currentText(),
                 self.__output_directory.text(),
                 self.__cobx_model.currentText(),
                 self.__cobx_device.currentText().lower(),
@@ -557,6 +557,7 @@ class MainPanel(QtWidgets.QWidget):
             try:
                 process.terminate()
             except AttributeError:
+                # When process hasn't started yet or already finished.
                 pass
 
         self.set_progress_indefinite.emit()
