@@ -1,0 +1,19 @@
+{
+    "name": "python-more-itertools",
+    "buildsystem": "simple",
+    "build-commands": [
+        "pip3 install --verbose --exists-action=i --no-index --find-links=\"file://${PWD}\" --prefix=${FLATPAK_DEST} \"more-itertools\" --no-build-isolation"
+    ],
+    "sources": [
+        {
+            "type": "file",
+            "url": "https://files.pythonhosted.org/packages/5d/87/1ec3fcc09d2c04b977eabf8a1083222f82eaa2f46d5a4f85f403bf8e7b30/more_itertools-9.0.0-py3-none-any.whl",
+            "sha256": "250e83d7e81d0c87ca6bd942e6aeab8cc9daa6096d12c5308f3f92fa5e5c1f41",
+            "x-checker-data": {
+                "type": "pypi",
+                "name": "more-itertools",
+                "packagetype": "bdist_wheel"
+            }
+        }
+    ]
+}

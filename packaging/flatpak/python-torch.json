@@ -1,0 +1,60 @@
+{
+    "name": "python-torch",
+    "buildsystem": "simple",
+    "build-commands": [
+        "pip3 install --verbose --exists-action=i --no-index --find-links=\"file://${PWD}\" --prefix=${FLATPAK_DEST} \"torch\" --no-build-isolation"
+    ],
+    "modules": ["python-typing-extentions.json"],
+    "sources": [
+        {
+            "type": "file",
+            "url": "https://files.pythonhosted.org/packages/81/58/431fd405855553af1a98091848cf97741302416b01462bbf9909d3c422b3/torch-1.13.1-cp310-cp310-manylinux1_x86_64.whl",
+            "sha256": "fd12043868a34a8da7d490bf6db66991108b00ffbeecb034228bfcbbd4197143",
+            "x-checker-data": {
+                "type": "pypi",
+                "name": "torch",
+                "packagetype": "bdist_wheel"
+            }
+        },
+        {
+            "type": "file",
+            "url": "https://files.pythonhosted.org/packages/ce/41/fdeb62b5437996e841d83d7d2714ca75b886547ee8017ee2fe6ea409d983/nvidia_cublas_cu11-11.10.3.66-py3-none-manylinux1_x86_64.whl",
+            "sha256": "d32e4d75f94ddfb93ea0a5dda08389bcc65d8916a25cb9f37ac89edaeed3bded",
+            "x-checker-data": {
+                "type": "pypi",
+                "name": "nvidia-cublas-cu11",
+                "packagetype": "bdist_wheel"
+            }
+        },
+        {
+            "type": "file",
+            "url": "https://files.pythonhosted.org/packages/ef/25/922c5996aada6611b79b53985af7999fc629aee1d5d001b6a22431e18fec/nvidia_cuda_nvrtc_cu11-11.7.99-2-py3-none-manylinux1_x86_64.whl",
+            "sha256": "9f1562822ea264b7e34ed5930567e89242d266448e936b85bc97a3370feabb03",
+            "x-checker-data": {
+                "type": "pypi",
+                "name": "nvidia-cuda-nvrtc-cu11",
+                "packagetype": "bdist_wheel"
+            }
+        },
+        {
+            "type": "file",
+            "url": "https://files.pythonhosted.org/packages/dc/30/66d4347d6e864334da5bb1c7571305e501dcb11b9155971421bb7bb5315f/nvidia_cudnn_cu11-8.5.0.96-2-py3-none-manylinux1_x86_64.whl",
+            "sha256": "402f40adfc6f418f9dae9ab402e773cfed9beae52333f6d86ae3107a1b9527e7",
+            "x-checker-data": {
+                "type": "pypi",
+                "name": "nvidia-cudnn-cu11",
+                "packagetype": "bdist_wheel"
+            }
+        },
+        {
+            "type": "file",
+            "url": "https://files.pythonhosted.org/packages/36/92/89cf558b514125d2ebd8344dd2f0533404b416486ff681d5434a5832a019/nvidia_cuda_runtime_cu11-11.7.99-py3-none-manylinux1_x86_64.whl",
+            "sha256": "cc768314ae58d2641f07eac350f40f99dcb35719c4faff4bc458a7cd2b119e31",
+            "x-checker-data": {
+                "type": "pypi",
+                "name": "nvidia-cuda-runtime-cu11",
+                "packagetype": "bdist_wheel"
+            }
+        }
+    ]
+}

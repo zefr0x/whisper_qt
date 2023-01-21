@@ -1,0 +1,78 @@
+{
+    "name": "ffmpeg-python",
+    "buildsystem": "simple",
+    "build-commands": [
+        "pip3 install --verbose --exists-action=i --no-index --find-links=\"file://${PWD}\" --prefix=${FLATPAK_DEST} \"ffmpeg-python\" --no-build-isolation"
+    ],
+    "sources": [
+        {
+            "type": "file",
+            "url": "https://files.pythonhosted.org/packages/d7/0c/56be52741f75bad4dc6555991fabd2e07b432d333da82c11ad701123888a/ffmpeg_python-0.2.0-py3-none-any.whl",
+            "sha256": "ac441a0404e053f8b6a1113a77c0f452f1cfc62f6344a769475ffdc0f56c23c5",
+            "x-checker-data": {
+                "type": "pypi",
+                "name": "ffmpeg-python",
+                "packagetype": "bdist_wheel"
+            }
+        },
+        {
+            "type": "file",
+            "url": "https://files.pythonhosted.org/packages/8f/2e/cf6accf7415237d6faeeebdc7832023c90e0282aa16fd3263db0eb4715ec/future-0.18.3.tar.gz",
+            "sha256": "34a17436ed1e96697a86f9de3d15a3b0be01d8bc8de9c1dffd59fb8234ed5307",
+            "x-checker-data": {
+                "type": "pypi",
+                "name": "future",
+                "packagetype": "sdist"
+            }
+        }
+    ],
+    "modules": [
+        {
+            "name": "ffmpeg",
+            "config-opts": [
+                "--disable-debug",
+                "--disable-doc",
+                "--disable-static",
+                "--disable-stripping",
+                "--disable-ffplay",
+                "--disable-ffprobe",
+                "--enable-lto",
+                "--enable-gmp",
+                "--enable-gnutls",
+                "--enable-gpl",
+                "--enable-optimizations",
+                "--enable-ladspa",
+                "--enable-libaom",
+                "--enable-libdav1d",
+                "--enable-libvpx",
+                "--enable-shared",
+                "--enable-version3",
+                "--enable-libopus",
+                "--enable-libpulse",
+                "--enable-libspeex",
+                "--enable-libtheora",
+                "--enable-libvorbis",
+                "--enable-libvpx",
+                "--enable-libwebp",
+                "--enable-openal",
+                "--enable-opengl",
+                "--enable-vulkan",
+                "--enable-sdl2"
+            ],
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://ffmpeg.org/releases/ffmpeg-5.1.2.tar.xz",
+                    "sha256": "619e706d662c8420859832ddc259cd4d4096a48a2ce1eefd052db9e440eef3dc",
+                    "x-checker-data": {
+                        "type": "anitya",
+                        "project-id": 5405,
+                        "stable-only": true,
+                        "url-template": "https://ffmpeg.org/releases/ffmpeg-$version.tar.xz"
+                    }
+                }
+            ],
+            "cleanup": ["/share/ffmpeg/examples"]
+        }
+    ]
+}
