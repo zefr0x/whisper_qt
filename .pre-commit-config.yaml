@@ -1,6 +1,8 @@
 ci:
   skip: [pip-compile]
 
+exclude: "^whisper_qt/whisper/"
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
