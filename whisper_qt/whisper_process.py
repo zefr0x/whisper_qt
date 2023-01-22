@@ -1,7 +1,7 @@
 """Processes to run whisper in them."""
+import multiprocessing
 from os import environ
 from pathlib import Path
-import multiprocessing
 
 from .__about__ import APP_NAME
 from .whisper import whisper

@@ -1,11 +1,11 @@
 """Main window for GUI."""
 # TODO: Config and enable internationalization.
+import threading
 from gettext import gettext as _
 from pathlib import Path
 from typing import Optional
 from typing import Sequence
 from webbrowser import open as open_url
-import threading
 
 from PySide6 import QtCore
 from PySide6 import QtGui
@@ -13,11 +13,11 @@ from PySide6 import QtWidgets
 
 from . import help_dialogs
 from . import preferences
+from .. import whisper_process
 from ..__about__ import APP_NAME_LOCALIZABLE
 from ..__about__ import BUG_REPORT_URL
 from ..__about__ import PROJECT_HOME_PAGE_URL
 from ..whisper import whisper
-from .. import whisper_process
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -195,7 +195,9 @@ class MainPanel(QtWidgets.QWidget):
 
         self.__cobx_audio_lang = QtWidgets.QComboBox()
         self.__cobx_audio_lang.addItem("Auto")
-        self.__cobx_audio_lang.addItems((x.title() for x in whisper.tokenizer.LANGUAGES.values()))
+        self.__cobx_audio_lang.addItems(
+            (x.title() for x in whisper.tokenizer.LANGUAGES.values())
+        )
         self.__cobx_audio_lang.setMaximumWidth(
             self.__cobx_audio_lang.minimumSizeHint().width()
         )
@@ -402,7 +404,7 @@ class MainPanel(QtWidgets.QWidget):
     # def __listener_opening_output_directory(self) -> None:
     #         open_file(self.__output_directory.text())
 
-    def __listener_reseting_gui_after_success(self):
+    def __listener_reseting_gui_after_success(self) -> None:
         """Clear list and enable buttons after success."""
         self.__selected_files_list.clear()
 
@@ -411,7 +413,7 @@ class MainPanel(QtWidgets.QWidget):
 
         self.__listener_reseting_gui_after_cancel()
 
-    def __listener_reseting_gui_after_cancel(self):
+    def __listener_reseting_gui_after_cancel(self) -> None:
         """Reset progress bar and enable buttons after canceling the operation."""
         # Show generate button insted of cancel button.
         self.__listener_toggle_generate_cancel_button()
@@ -433,7 +435,7 @@ class MainPanel(QtWidgets.QWidget):
         self.__sp_beam_size.setEnabled(True)
         self.__cbx_fp16.setEnabled(True)
 
-    def __listener_locking_buttons_during_operation(self):
+    def __listener_locking_buttons_during_operation(self) -> None:
         """Disable buttons when there is a running operation."""
         self.__b_remove_files.setEnabled(False)
         self.__b_select_files.setEnabled(False)
@@ -448,21 +450,21 @@ class MainPanel(QtWidgets.QWidget):
         self.__sp_beam_size.setEnabled(False)
         self.__cbx_fp16.setEnabled(False)
 
-    def __listener_updateing_progress(self, string: str, percentage: int):
+    def __listener_updateing_progress(self, string: str, percentage: int) -> None:
         """When there is a progress update display it in the GUI."""
         self.__current_operation_progress_lable.setText(string)
         self.__progress_bar.setValue(percentage)
 
-    def __listener_updating_file_progress(self, string: str):
+    def __listener_updating_file_progress(self, string: str) -> None:
         """Update the GUI to display which file it currently being processed."""
         self.__current_file_progress_lable.setText(string)
 
-    def __listener_setting_progress_indefinite(self):
+    def __listener_setting_progress_indefinite(self) -> None:
         """Make the progress bar indefinite by making no minimum or maximum value."""
         self.__progress_bar.setMinimum(0)
         self.__progress_bar.setMaximum(0)
 
-    def __reset_progressbar(self):
+    def __reset_progressbar(self) -> None:
         """Reset the progress bar to its default status."""
         self.__progress_bar.setMinimum(0)
         self.__progress_bar.setMaximum(100)
@@ -483,7 +485,7 @@ class MainPanel(QtWidgets.QWidget):
 
         return message.exec()
 
-    def __listener_toggle_generate_cancel_button(self):
+    def __listener_toggle_generate_cancel_button(self) -> None:
         """Show a `generate` button when the task is not running, and vice versa."""
         if self.__b_run_generator.isHidden():
             self.__b_run_generator.setHidden(False)
@@ -492,7 +494,7 @@ class MainPanel(QtWidgets.QWidget):
             self.__b_run_generator.setHidden(True)
             self.__b_cancel_generator.setHidden(False)
 
-    def __listener_running_generator(self):
+    def __listener_running_generator(self) -> None:
         """Actions when the task is started."""
         self.lock_buttons_during_operation.emit()
 
@@ -508,7 +510,9 @@ class MainPanel(QtWidgets.QWidget):
                 self.__cobx_device.currentText().lower(),
                 self.__sp_threads.value(),
                 options={
-                    "task": ("transcribe", "translate")[self.__cobx_task.currentIndex()],
+                    "task": ("transcribe", "translate")[
+                        self.__cobx_task.currentIndex()
+                    ],
                     "temperature": self.__sp_temperature.value(),
                     "best_of": self.__sp_best_of.value(),
                     "beam_size": self.__sp_beam_size.value(),
@@ -546,7 +550,7 @@ class MainPanel(QtWidgets.QWidget):
         # TODO: Display errors and warnings.
         # self.__show_message()
 
-    def __listener_cancel_generator(self):
+    def __listener_cancel_generator(self) -> None:
         """Actions when the task is canceled."""
         self.update_progress.emit(_("Cancelling..."), 0)
         self.update_file_progress.emit("")
@@ -563,14 +567,14 @@ class MainPanel(QtWidgets.QWidget):
         self.set_progress_indefinite.emit()
         self.reset_gui_after_cancel.emit()
 
-    def dragEnterEvent(self, event):  # noqa: N802
+    def dragEnterEvent(self, event: QtGui.QDragEnterEvent) -> None:  # noqa: N802
         """When a drag action enters the panel."""
         if event.mimeData().hasUrls:
             event.accept()
         else:
             event.ignore()
 
-    def dragMoveEvent(self, event):  # noqa: N802
+    def dragMoveEvent(self, event: QtGui.QDragMoveEvent) -> None:  # noqa: N802
         """While a drag action is in progress."""
         if event.mimeData().hasUrls:
             event.setDropAction(QtCore.Qt.CopyAction)
@@ -578,7 +582,7 @@ class MainPanel(QtWidgets.QWidget):
         else:
             event.ignore()
 
-    def dropEvent(self, event):  # noqa: N802
+    def dropEvent(self, event: QtGui.QDropEvent) -> None:  # noqa: N802
         """When a drag action is completed."""
         if event.mimeData().hasUrls:
             event.setDropAction(QtCore.Qt.CopyAction)
