@@ -13,10 +13,12 @@ from PySide6 import QtWidgets
 
 from . import help_dialogs
 from . import preferences
+from .. import default_files
 from .. import whisper_process
 from ..__about__ import APP_NAME_LOCALIZABLE
 from ..__about__ import BUG_REPORT_URL
 from ..__about__ import PROJECT_HOME_PAGE_URL
+from ..config import Config
 from ..whisper import whisper
 
 
@@ -102,6 +104,11 @@ class MainPanel(QtWidgets.QWidget):
     def __init__(self) -> None:
         """Initialize base components."""
         super().__init__()
+
+        # Load config
+        self.__config = Config()
+        self.__config.read_config()
+        # TODO: Set GUI options with the loaded config.
 
         # Accept drap files to the panel.
         # Configured in self.dragEnterEvent, self.dragMoveEvent, self.dropEvent.
@@ -504,6 +511,8 @@ class MainPanel(QtWidgets.QWidget):
         self.processes = [
             whisper_process.WhisperProcess(
                 audio_file,
+                self.__config.get_option("prefrences", "model_directory")
+                or str(default_files.xdg_cache_dir()),
                 self.__cobx_audio_lang.currentText(),
                 self.__output_directory.text(),
                 self.__cobx_model.currentText(),

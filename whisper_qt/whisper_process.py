@@ -1,9 +1,7 @@
 """Processes to run whisper in them."""
 import multiprocessing
-from os import environ
 from pathlib import Path
 
-from .__about__ import APP_NAME
 from .whisper import whisper
 
 
@@ -13,6 +11,7 @@ class WhisperProcess(multiprocessing.Process):
     def __init__(
         self,
         audio_file_path: str,
+        model_dir: str,
         audio_language: str,
         output_directory: str,
         model: str,
@@ -35,16 +34,7 @@ class WhisperProcess(multiprocessing.Process):
         else:
             self.audio_language = audio_language
 
-        # TODO: Add prefrece option to select a model_dir.
-
-        # Use the XDG base directory.
-        if environ.get("XDG_CACHE_HOME"):
-            # The (or "") is to pass the type check.
-            xdg_cache_home = Path(environ.get("XDG_CACHE_HOME") or "")
-        else:
-            xdg_cache_home = Path.home().joinpath(".cache")
-
-        self.model_dir = str(xdg_cache_home / APP_NAME)
+        self.model_dir = model_dir
 
     def run(self) -> None:
         """Run when the process starts."""
