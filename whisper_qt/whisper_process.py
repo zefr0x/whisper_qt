@@ -42,7 +42,7 @@ class WhisperProcess(multiprocessing.Process):
             whisper.torch.set_num_threads(self.threads)
 
         # TODO: If model is not downloaded, warn user that it will take time.
-        # TODO: If an english only module was used in other language warn user.
+        # TODO: If an english only model was used in other language warn user.
         # TODO: If a non-english language was used in english warn user.
         model = whisper.load_model(self.model, self.device, self.model_dir)
 

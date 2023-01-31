@@ -32,9 +32,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.resize(900, 450)
         self.setWindowTitle(APP_NAME_LOCALIZABLE)
 
-        main_panel = MainPanel()
+        # Load config
+        self.__config = Config()
+        self.__config.read_config()
 
-        self.setCentralWidget(main_panel)
+        self.main_panel = MainPanel(self.__config)
+
+        self.setCentralWidget(self.main_panel)
 
         self.menu_bar = self.menuBar()
 
@@ -53,8 +57,7 @@ class MainWindow(QtWidgets.QMainWindow):
             _("&Sava Current Options as Default"),
             self,
         )
-        # TODO: Implement save current options action.
-        # save_current_options.triggered.connect()
+        save_current_options.triggered.connect(self.__listener_save_current_options)
         config_menu.addAction(save_current_options)
 
         # Action to exit the application.
@@ -85,6 +88,15 @@ class MainWindow(QtWidgets.QMainWindow):
         about.triggered.connect(lambda: help_dialogs.About().exec())
         help_menu.addAction(about)
 
+    def __listener_save_current_options(self) -> None:
+        """Save current selected whisper options to config file."""
+        # If the user changed the config after it was loaded first time.
+        self.__config.read_config()
+
+        self.main_panel.save_current_options()
+
+        self.__config.write_config()
+
 
 class MainPanel(QtWidgets.QWidget):
     """Central widget for the main window."""
@@ -101,14 +113,11 @@ class MainPanel(QtWidgets.QWidget):
     # To tell the processes thread that the task was canceled and didn't success.
     processes_thread_stop = threading.Event()
 
-    def __init__(self) -> None:
+    def __init__(self, config: Config) -> None:
         """Initialize base components."""
         super().__init__()
 
-        # Load config
-        self.__config = Config()
-        self.__config.read_config()
-        # TODO: Set GUI options with the loaded config.
+        self.__config = config
 
         # Accept drap files to the panel.
         # Configured in self.dragEnterEvent, self.dragMoveEvent, self.dropEvent.
@@ -177,7 +186,9 @@ class MainPanel(QtWidgets.QWidget):
         self.__output_directory.setToolTip(_("Click to open directory"))
         output_directory_layout.addWidget(self.__output_directory)
         # Default output directory.
-        self.__output_directory.setText(str(Path.home()))
+        self.__output_directory.setText(
+            str(Path.home())
+        )  # No need to be saved in config file.
 
         # A spacer
         main_layout.addItem(QtWidgets.QSpacerItem(0, 15))
@@ -193,6 +204,11 @@ class MainPanel(QtWidgets.QWidget):
         self.__cobx_model = QtWidgets.QComboBox()
         self.__cobx_model.addItems(whisper.available_models())
         self.__cobx_model.setMaximumWidth(self.__cobx_model.minimumSizeHint().width())
+        self.__cobx_model.setCurrentIndex(
+            self.__cobx_model.findText(
+                self.__config.get_option("whisper", "model") or "tiny"
+            )
+        )
         options_layout.addWidget(self.__cobx_model)
 
         options_layout.addSpacing(35)
@@ -208,6 +224,14 @@ class MainPanel(QtWidgets.QWidget):
         self.__cobx_audio_lang.setMaximumWidth(
             self.__cobx_audio_lang.minimumSizeHint().width()
         )
+        default_index = self.__cobx_audio_lang.findText(
+            self.__config.get_option("whisper", "audio_lang")
+        )
+        if default_index == -1:
+            default_index = (
+                0  # Select the `Auto` option when there is not language in the config.
+            )
+        self.__cobx_audio_lang.setCurrentIndex(default_index)
         options_layout.addWidget(self.__cobx_audio_lang)
 
         options_layout.addSpacing(35)
@@ -218,6 +242,9 @@ class MainPanel(QtWidgets.QWidget):
         self.__cobx_task = QtWidgets.QComboBox()
         self.__cobx_task.addItems((_("Transcribe"), _("Translate")))  # Index 0, 1
         self.__cobx_task.setMaximumWidth(self.__cobx_task.minimumSizeHint().width())
+        self.__cobx_task.setCurrentIndex(
+            int(self.__config.get_option("whisper", "task") or 0)
+        )
         options_layout.addWidget(self.__cobx_task)
 
         options_layout.addSpacing(35)
@@ -228,6 +255,11 @@ class MainPanel(QtWidgets.QWidget):
         self.__cobx_device = QtWidgets.QComboBox()
         self.__cobx_device.addItems(("CUDA", "CPU"))
         self.__cobx_device.setMaximumWidth(self.__cobx_device.minimumSizeHint().width())
+        self.__cobx_device.setCurrentIndex(
+            self.__cobx_device.findText(
+                self.__config.get_option("whisper", "device") or "CUDA"
+            )
+        )
         options_layout.addWidget(self.__cobx_device)
 
         options_layout.addSpacing(35)
@@ -237,6 +269,9 @@ class MainPanel(QtWidgets.QWidget):
 
         self.__sp_threads = QtWidgets.QSpinBox()
         self.__sp_threads.setMaximumWidth(self.__sp_threads.minimumSizeHint().width())
+        self.__sp_threads.setValue(
+            int(self.__config.get_option("whisper", "threads") or 0)
+        )
         options_layout.addWidget(self.__sp_threads)
 
         options_layout.addSpacing(35)
@@ -252,9 +287,11 @@ class MainPanel(QtWidgets.QWidget):
 
         # TODO: Find a way to apply tuple rather then just single float.
         self.__sp_temperature = QtWidgets.QDoubleSpinBox()
-        self.__sp_temperature.setValue(0)
         self.__sp_temperature.setMaximumWidth(
             self.__sp_temperature.minimumSizeHint().width()
+        )
+        self.__sp_temperature.setValue(
+            float(self.__config.get_option("whisper", "temperature") or 0.0)
         )
         advanced_options_layout.addWidget(self.__sp_temperature)
 
@@ -264,8 +301,10 @@ class MainPanel(QtWidgets.QWidget):
         advanced_options_layout.addWidget(QtWidgets.QLabel(_("Best of")))
 
         self.__sp_best_of = QtWidgets.QSpinBox()
-        self.__sp_best_of.setValue(5)
         self.__sp_best_of.setMaximumWidth(self.__sp_best_of.minimumSizeHint().width())
+        self.__sp_best_of.setValue(
+            int(self.__config.get_option("whisper", "best_of") or 5)
+        )
         advanced_options_layout.addWidget(self.__sp_best_of)
 
         advanced_options_layout.addSpacing(35)
@@ -274,9 +313,11 @@ class MainPanel(QtWidgets.QWidget):
         advanced_options_layout.addWidget(QtWidgets.QLabel(_("Beam Size")))
 
         self.__sp_beam_size = QtWidgets.QSpinBox()
-        self.__sp_beam_size.setValue(5)
         self.__sp_beam_size.setMaximumWidth(
             self.__sp_beam_size.minimumSizeHint().width()
+        )
+        self.__sp_beam_size.setValue(
+            int(self.__config.get_option("whisper", "beam_size") or 5)
         )
         advanced_options_layout.addWidget(self.__sp_beam_size)
 
@@ -287,6 +328,9 @@ class MainPanel(QtWidgets.QWidget):
 
         self.__cbx_fp16 = QtWidgets.QCheckBox()
         self.__cbx_fp16.setMaximumWidth(self.__cbx_fp16.minimumSizeHint().width())
+        self.__cbx_fp16.setChecked(
+            bool(int(self.__config.get_option("whisper", "fp16") or 0))
+        )
         advanced_options_layout.addWidget(self.__cbx_fp16)
 
         # TODO: Add patience option.
@@ -353,6 +397,23 @@ class MainPanel(QtWidgets.QWidget):
         self.toggle_generate_cancel_button.connect(
             self.__listener_toggle_generate_cancel_button
         )
+
+    def save_current_options(self) -> None:
+        """Add current selected whisper option in the config object."""
+        # TODO: Use signals to set single option when an option is changed, not all of them at ones.
+
+        def setter(option: str, value: str) -> None:
+            self.__config.set_option("whisper", option, value)
+
+        setter("model", self.__cobx_model.currentText())
+        setter("audio_lang", self.__cobx_audio_lang.currentText())
+        setter("task", str(self.__cobx_task.currentIndex()))
+        setter("device", self.__cobx_device.currentText())
+        setter("threads", str(self.__sp_threads.value()))
+        setter("temperature", str(self.__sp_temperature.value()))
+        setter("best_of", str(self.__sp_best_of.value()))
+        setter("beam_size", str(self.__sp_beam_size.value()))
+        setter("fp16", str(int(self.__cbx_fp16.isChecked())))
 
     def __add_files_to_list(self, files: tuple[str, ...]) -> None:
         """

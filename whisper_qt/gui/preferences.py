@@ -35,7 +35,7 @@ class PreferencesDialog(QtWidgets.QDialog):
         model_directory_layout = QtWidgets.QHBoxLayout()
         main_layout.addLayout(model_directory_layout)
 
-        self.__b_select_model_dir = QtWidgets.QPushButton(_("Module Directory"))
+        self.__b_select_model_dir = QtWidgets.QPushButton(_("Model Directory"))
         self.__b_select_model_dir.setFixedSize(150, 35)
         model_directory_layout.addWidget(self.__b_select_model_dir)
         self.__b_select_model_dir.clicked.connect(
