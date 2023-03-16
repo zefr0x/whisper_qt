@@ -1,3 +1,9 @@
+> **Warning** : This repository/project is no longer maintained.
+
+If you want an alternative, take a look at [Buzz](https://github.com/chidiwilliams/buzz).
+
+---
+
 <div align = center>
 
 ![Logo](assets/io.github.zer0_x.Whisper_Qt.svg)
