@@ -25,6 +25,11 @@
 - 🧾 Free software under the [GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.html) licence.
 - ...
 
+# Screenshots
+
+<img src = "https://user-images.githubusercontent.com/65136727/225508467-4d1efa69-76ec-4cc4-9f6b-182db8db502d.png" height="300px">
+
+<sub>The theme might be differant depending on your desktop environment.</sub>
 
 ## Installation
 ### Flatpak
@@ -48,13 +53,6 @@ python3 setup.py install
 ```shell
 whisper-qt
 ```
-
-<!-- TODO: Add screenshots. -->
-<!-- # Screenshots -->
-<!---->
-<!-- <img src = "" height="300px"> -->
-<!---->
-<!-- <sub>The theme might be differant depending on your desktop environment.</sub> -->
 
 ## Troubleshooting
 - The application is using Qt6 so it might not be theamed as your system, since it is not supported by a lot of themes. There is no sulotion other then wating for the support.
